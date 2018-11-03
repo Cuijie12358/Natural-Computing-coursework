@@ -1,6 +1,6 @@
 # Natural-Computing-coursework-2018-19
 *Jie Cui:* https://github.com/Cuijie12358 .  
-*Wei Yu:*
+*Wei Yu:* https://github.com/cyrus-blue
 
 ## Description
 
