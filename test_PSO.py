@@ -2,7 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-MAX_ITER = 20000
+MAX_ITER = 400
 
 
 
@@ -44,8 +44,8 @@ def constraints(x, old_x=None):
 # -------------------Setting PSO Parameters-------------------------
 class PSO():
     def __init__(self, p_num, dim, fit_function):
-        self.omiga = 0.5
-        self.alpha1 = 0.2
+        self.omiga = 0.6
+        self.alpha1 = 0.4
         self.alpha2 = 0.2
         self.p_num = p_num
         self.dim = dim
@@ -84,15 +84,24 @@ class PSO():
             print("Iter: ", t, " Cost: ", self.fit,"Para: ", self.omiga,self.alpha1,self.alpha2)
         return fitness
 
-my_pso = PSO(p_num=200, dim=7, fit_function = fit_function)
 
-fitness = my_pso.iterator()
-# -------------------figure--------------------
-plt.figure(1)
-plt.title("Find minimum of function")
-plt.xlabel("iterators", size=14)
-plt.ylabel("fitness", size=14)
-t = np.array([t for t in range(MAX_ITER)])
-fitness = np.array(fitness)
-plt.plot(t, fitness, color='b', linewidth=3)
-plt.show()
+if __name__ == '__main__':
+    fitness_list = []
+    t_range = 10
+    for t in range(t_range):
+        my_pso = PSO(p_num=2000, dim=7, fit_function = fit_function)
+
+        fitness = my_pso.iterator()
+        fitness_list.append(fitness[-1])
+    print("fitness each time:",fitness_list)
+    print("mean_fitness:",np.mean(fitness_list),"Best_fitness:",np.min(fitness_list))
+    # -------------------figure--------------------
+    plt.figure(1)
+    plt.title("Find minimum of function")
+    plt.xlabel("iterators", size=14)
+    plt.ylabel("fitness", size=14)
+    # t = np.array([t for t in range(MAX_ITER)])
+    fitness = np.array(fitness)
+    # plt.plot(t, fitness, color='b', linewidth=3)
+    plt.plot(range(t_range),fitness_list,color = 'r')
+    plt.show()
