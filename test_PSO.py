@@ -1,82 +1,98 @@
 # coding: utf-8
 import numpy as np
-import random
 import matplotlib.pyplot as plt
 
+MAX_ITER = 20000
 
-# ----------------------PSO参数设置---------------------------------
+
+
+def fit_function(x):
+    f = (x[0]-10)**2 + 5*(x[1]-12)**2 + x[2]**4 + 3*(x[3]-11)**2 + 10*x[4]**6 + 7*x[5]**2 \
+        + x[6]**4 - 4*x[5]*x[6] - 10*x[5] - 8*x[6]
+    return f
+
+
+def constraints(x, old_x=None):
+    if old_x is None:
+        if (np.max(x) > 10) or (np.min(x) < -10):
+            x = 20*np.random.rand(len(x))-10
+        g1 = 127 - 2*x[0]**2 - 3*x[1]**4 - x[2] - 4*x[3]**2 -5*x[4]
+        g2 = 282 - 7*x[0] - 3*x[1] - 10*x[2]**2 - x[3] + x[4]
+        g3 = 196 - 23*x[0] - x[1]**2 - 6*x[5]**2 + 8*x[6]
+        g4 = -4*x[0]**2 - x[1]**2 + 3*x[0]*x[1] - 2*x[2]**2 - 5*x[5] + 11*x[6]
+
+        while(g1 < 0 or g2 < 0 or g3 < 0 or g4 < 0):
+            x = 20 * np.random.rand(len(x)) - 10
+            g1 = 127 - 2*x[0]**2 - 3*x[1]**4 - x[2] - 4*x[3]**2 -5*x[4]
+            g2 = 282 - 7*x[0] - 3*x[1] - 10*x[2]**2 - x[3] + x[4]
+            g3 = 196 - 23*x[0] - x[1]**2 - 6*x[5]**2 + 8*x[6]
+            g4 = -4*x[0]**2 - x[1]**2 + 3*x[0]*x[1] - 2*x[2]**2 - 5*x[5] + 11*x[6]
+        return x
+    else:
+        if (np.max(x) > 10) or (np.min(x) < -10):
+            return old_x
+        g1 = 127 - 2*x[0]**2 - 3*x[1]**4 - x[2] - 4*x[3]**2 -5*x[4]
+        g2 = 282 - 7*x[0] - 3*x[1] - 10*x[2]**2 - x[3] + x[4]
+        g3 = 196 - 23*x[0] - x[1]**2 - 6*x[5]**2 + 8*x[6]
+        g4 = -4*x[0]**2 - x[1]**2 + 3*x[0]*x[1] - 2*x[2]**2 - 5*x[5] + 11*x[6]
+        if g1 < 0 or g2 < 0 or g3 < 0 or g4 < 0:
+            return old_x
+        return x
+
+
+
+# -------------------Setting PSO Parameters-------------------------
 class PSO():
-    def __init__(self, pN, dim, max_iter):
-        self.w = 0.8
-        self.c1 = 2
-        self.c2 = 2
-        self.r1 = 0.6
-        self.r2 = 0.3
-        self.pN = pN  # 粒子数量
-        self.dim = dim  # 搜索维度
-        self.max_iter = max_iter  # 迭代次数
-        self.X = np.zeros((self.pN, self.dim))  # 所有粒子的位置和速度
-        self.V = np.zeros((self.pN, self.dim))
-        self.pbest = np.zeros((self.pN, self.dim))  # 个体经历的最佳位置和全局最佳位置
-        self.gbest = np.zeros((1, self.dim))
-        self.p_fit = np.zeros(self.pN)  # 每个个体的历史最佳适应值
-        self.fit = 1e10  # 全局最佳适应值
+    def __init__(self, p_num, dim, fit_function):
+        self.omiga = 0.5
+        self.alpha1 = 0.2
+        self.alpha2 = 0.2
+        self.p_num = p_num
+        self.dim = dim
+        self.max_iter = MAX_ITER
+        self.X = 20 * np.random.rand(self.p_num, self.dim) - 10
+        self.V = 20 * np.random.rand(self.p_num, self.dim) - 10
+        self.pbest = np.array(self.X)
+        self.p_fit = np.zeros(self.p_num)
+        for i in range(self.p_num):
+            self.X[i] = constraints(self.X[i])
+            # print(self.p_num[i])
+            self.p_fit[i] = fit_function(self.X[i])
+        self.gbest = self.X[np.argmin(self.p_fit)]
+        self.fit = np.min(self.p_fit)
 
-    # ---------------------目标函数Sphere函数-----------------------------
-    def function(self, x):
-        sum = 0
-        length = len(x)
-        x = x ** 2
-        for i in range(length):
-            sum += x[i]
-        return sum
-
-    # ---------------------初始化种群----------------------------------
-    def init_Population(self):
-        for i in range(self.pN):
-            for j in range(self.dim):
-                self.X[i][j] = random.uniform(0, 1)
-                self.V[i][j] = random.uniform(0, 1)
-            self.pbest[i] = self.X[i]
-            tmp = self.function(self.X[i])
-            self.p_fit[i] = tmp
-            if (tmp < self.fit):
-                self.fit = tmp
-                self.gbest = self.X[i]
-
-            # ----------------------更新粒子位置----------------------------------
-
+    # ----------------------update the location----------------------------
     def iterator(self):
         fitness = []
+
         for t in range(self.max_iter):
-            for i in range(self.pN):  # 更新gbest\pbest
-                temp = self.function(self.X[i])
-                if (temp < self.p_fit[i]):  # 更新个体最优
-                    self.p_fit[i] = temp
+            for i in range(self.p_num):
+                self.V[i] = self.omiga * self.V[i] + self.alpha1 * (self.pbest[i] - self.X[i]) + \
+                            self.alpha2 * (self.gbest - self.X[i])
+                new_x = self.X[i] + self.V[i]
+                self.X[i] = constraints(new_x, self.X[i])
+                new_fit = fit_function(self.X[i])
+                # update local best
+                if new_fit < self.p_fit[i]:
+                    self.p_fit[i] = new_fit
                     self.pbest[i] = self.X[i]
-                    if (self.p_fit[i] < self.fit):  # 更新全局最优
-                        self.gbest = self.X[i]
-                        self.fit = self.p_fit[i]
-            for i in range(self.pN):
-                self.V[i] = self.w * self.V[i] + self.c1 * self.r1 * (self.pbest[i] - self.X[i]) + \
-                            self.c2 * self.r2 * (self.gbest - self.X[i])
-                self.X[i] = self.X[i] + self.V[i]
+
+            # update global best
+            self.gbest = self.X[np.argmin(self.p_fit)]
+            self.fit = np.min(self.p_fit)
             fitness.append(self.fit)
-            print(self.fit)  # 输出最优值
+            print("Iter: ", t, " Cost: ", self.fit,"Para: ", self.omiga,self.alpha1,self.alpha2)
         return fitness
 
-    # ----------------------程序执行-----------------------
+my_pso = PSO(p_num=200, dim=7, fit_function = fit_function)
 
-
-my_pso = PSO(pN=30, dim=5, max_iter=100)
-my_pso.init_Population()
 fitness = my_pso.iterator()
-# -------------------画图--------------------
+# -------------------figure--------------------
 plt.figure(1)
-plt.title("Figure1")
+plt.title("Find minimum of function")
 plt.xlabel("iterators", size=14)
 plt.ylabel("fitness", size=14)
-t = np.array([t for t in range(0, 100)])
+t = np.array([t for t in range(MAX_ITER)])
 fitness = np.array(fitness)
 plt.plot(t, fitness, color='b', linewidth=3)
 plt.show()

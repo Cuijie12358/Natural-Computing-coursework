@@ -1,4 +1,6 @@
+#!
 # coding: utf-8
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -51,7 +53,6 @@ class PSO():
         self.p_fit = np.zeros(self.p_num)
         for i in range(self.p_num):
             self.X[i] = constraints(self.X[i])
-        for i in range(self.p_num):
             # print(self.p_num[i])
             self.p_fit[i] = fit_function(self.X[i])
         self.gbest = self.X[np.argmin(self.p_fit)]
@@ -80,15 +81,17 @@ class PSO():
             print("Iter: ", t, " Cost: ", self.fit,"Para: ", self.omiga,self.alpha1,self.alpha2)
         return fitness
 
-my_pso = PSO(p_num=60, dim=7, fit_function = fit_function)
 
-fitness = my_pso.iterator()
-# -------------------画图--------------------
-plt.figure(1)
-plt.title("Find minimum of function")
-plt.xlabel("iterators", size=14)
-plt.ylabel("fitness", size=14)
-t = np.array([t for t in range(MAX_ITER)])
-fitness = np.array(fitness)
-plt.plot(t, fitness, color='b', linewidth=3)
-plt.show()
+if __name__ == '__main__':
+    my_pso = PSO(p_num=200, dim=7, fit_function = fit_function)
+
+    fitness = my_pso.iterator()
+    # -------------------figure--------------------
+    plt.figure(1)
+    plt.title("Find minimum of function")
+    plt.xlabel("iterators", size=14)
+    plt.ylabel("fitness", size=14)
+    t = np.array([t for t in range(MAX_ITER)])
+    fitness = np.array(fitness)
+    plt.plot(t, fitness, color='b', linewidth=3)
+    plt.show()
