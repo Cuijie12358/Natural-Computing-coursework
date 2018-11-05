@@ -1,8 +1,9 @@
 # coding: utf-8
 import numpy as np
 import matplotlib.pyplot as plt
+import decimal
 
-MAX_ITER = 400
+MAX_ITER = 300
 
 
 
@@ -45,7 +46,7 @@ def constraints(x, old_x=None):
 class PSO():
     def __init__(self, p_num, dim, fit_function):
         self.omiga = 0.6
-        self.alpha1 = 0.4
+        self.alpha1 = 0.2
         self.alpha2 = 0.2
         self.p_num = p_num
         self.dim = dim
@@ -89,7 +90,7 @@ if __name__ == '__main__':
     fitness_list = []
     t_range = 10
     for t in range(t_range):
-        my_pso = PSO(p_num=2000, dim=7, fit_function = fit_function)
+        my_pso = PSO(p_num=2500, dim=7, fit_function = fit_function)
 
         fitness = my_pso.iterator()
         fitness_list.append(fitness[-1])
@@ -103,5 +104,8 @@ if __name__ == '__main__':
     # t = np.array([t for t in range(MAX_ITER)])
     fitness = np.array(fitness)
     # plt.plot(t, fitness, color='b', linewidth=3)
+    for x, y in zip(range(t_range), fitness_list):
+        y2 = decimal.Decimal(y).quantize(decimal.Decimal('0.0000'))
+        plt.text(x, y+0.01, str(y2), ha='center', va='bottom')
     plt.plot(range(t_range),fitness_list,color = 'r')
     plt.show()
