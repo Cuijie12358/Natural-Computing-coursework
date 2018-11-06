@@ -45,7 +45,7 @@ def constraints(x, old_x=None):
 # -------------------Setting PSO Parameters-------------------------
 class PSO():
     def __init__(self, p_num, dim, fit_function):
-        self.omiga = 0.6
+        self.omiga = 0.5
         self.alpha1 = 0.2
         self.alpha2 = 0.2
         self.p_num = p_num
@@ -90,7 +90,7 @@ if __name__ == '__main__':
     fitness_list = []
     t_range = 10
     for t in range(t_range):
-        my_pso = PSO(p_num=2500, dim=7, fit_function = fit_function)
+        my_pso = PSO(p_num=2400, dim=7, fit_function = fit_function)
 
         fitness = my_pso.iterator()
         fitness_list.append(fitness[-1])
@@ -108,4 +108,5 @@ if __name__ == '__main__':
         y2 = decimal.Decimal(y).quantize(decimal.Decimal('0.0000'))
         plt.text(x, y+0.01, str(y2), ha='center', va='bottom')
     plt.plot(range(t_range),fitness_list,color = 'r')
+    plt.savefig("PSO.pdf")
     plt.show()
