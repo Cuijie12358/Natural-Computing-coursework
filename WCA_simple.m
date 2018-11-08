@@ -138,7 +138,7 @@ for i=1:max_it
     for j = 1:Nsr-1
         if abs(sea - rivers(j,:)) < dmax
             for k=1:NSn(j)
-                indx = k + sum(NSn(1:k));
+                indx = k + sum(NSn(1:j));
                 raindrops(indx,:) = lb + rand(1,num_var).*(ub-lb);
                 while const(raindrops(indx,:),numq) == 0
                     raindrops(indx,:) = lb + (ub - lb).*rand(1,num_var);
