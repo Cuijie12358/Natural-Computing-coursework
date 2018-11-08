@@ -17,8 +17,7 @@ def fit_function1(x):
     return f
 def constraints1(x, old_x=None):
     if old_x is None:
-        if (np.max(x) > 10) or (np.min(x) < -10):
-            x = 20*np.random.rand(len(x))-10
+        x = 20*np.random.rand(len(x))-10
         g1 = 127 - 2*x[0]**2 - 3*x[1]**4 - x[2] - 4*x[3]**2 -5*x[4]
         g2 = 282 - 7*x[0] - 3*x[1] - 10*x[2]**2 - x[3] + x[4]
         g3 = 196 - 23*x[0] - x[1]**2 - 6*x[5]**2 + 8*x[6]
@@ -125,23 +124,26 @@ def constraints3(x, old_x=None):
             return old_x
         return x
 
+fit_function_list =[fit_function1, fit_function2]
+constraints_list =[constraints1, constraints2]
 
 # -------------------Setting PSO Parameters-------------------------
 class PSO():
-    def __init__(self, p_num, dim, fit_function):
-        self.omiga = 0.0
-        self.alpha1 = 0.4
-        self.alpha2 = 0.6
+    def __init__(self, p_num, dim, fit_function_order):
+        self.omiga = 0.3
+        self.alpha1 = 1
+        self.alpha2 = 3
         self.p_num = p_num
         self.dim = dim
         self.max_iter = MAX_ITER
         self.X = np.zeros((self.p_num,self.dim))
         self.V = np.zeros((self.p_num,self.dim))
         self.p_fit = np.zeros(self.p_num)
+        self.fit_function_order = fit_function_order-1
         for i in range(self.p_num):
-            self.X[i] = constraints2(self.X[i])
+            self.X[i] = constraints_list[self.fit_function_order](self.X[i])
             # print(self.p_num[i])
-            self.p_fit[i] = fit_function(self.X[i])
+            self.p_fit[i] = fit_function_list[self.fit_function_order](self.X[i])
         self.pbest = np.array(self.X)
         self.gbest = self.X[np.argmin(self.p_fit)]
         self.fit = np.min(self.p_fit)
@@ -152,54 +154,32 @@ class PSO():
 
         for t in range(self.max_iter):
             for i in range(self.p_num):
-                self.V[i] = self.omiga * self.V[i] + self.alpha1 * (self.pbest[i] - self.X[i]) + \
-                            self.alpha2 * (self.gbest - self.X[i])
+                self.V[i] = self.omiga * self.V[i] + self.alpha1 * np.random.rand() * (self.pbest[i] - self.X[i]) + \
+                            self.alpha2 * np.random.rand() * (self.gbest - self.X[i])
                 new_x = self.X[i] + self.V[i]
-                self.X[i] = constraints2(new_x, self.X[i])
-                new_fit = fit_function2(self.X[i])
+                self.X[i] = constraints_list[self.fit_function_order](new_x, self.X[i])
+                new_fit = fit_function_list[self.fit_function_order](self.X[i])
                 # update local best
                 self.p_fit[i] = new_fit
                 if new_fit < self.p_fit[i]:
                     self.pbest[i] = self.X[i]
 
             # update global best
-            self.gbest = self.X[np.argmin(self.p_fit)]
-            self.fit = np.min(self.p_fit)
+            if (self.fit > np.min(self.p_fit)):
+                self.gbest = self.X[np.argmin(self.p_fit)]
+                self.fit = np.min(self.p_fit)
+
             fitness.append(self.fit)
             print("Iter: ", t, " Cost: ", self.fit,"Para: ", self.omiga,self.alpha1,self.alpha2)
         return fitness
 
 
 if __name__ == '__main__':
-    # fitness_list = []
-    # t_range = 10
-    # for t in range(t_range):
-    #     my_pso = PSO(p_num=100, dim=dim1, fit_function = fit_function1)
-    #
-    #     fitness = my_pso.iterator()
-    #     fitness_list.append(fitness[-1])
-    # print("fitness each time:",fitness_list)
-    # print("mean_fitness:",np.mean(fitness_list),"Best_fitness:",np.min(fitness_list))
-    # # -------------------figure--------------------
-    # plt.figure(1)
-    # plt.title("Find minimum of function")
-    # plt.xlabel("iterators", size=14)
-    # plt.ylabel("fitness", size=14)
-    # # t = np.array([t for t in range(MAX_ITER)])
-    # fitness = np.array(fitness)
-    # # plt.plot(t, fitness, color='b', linewidth=3)
-    # for x, y in zip(range(t_range), fitness_list):
-    #     y2 = decimal.Decimal(y).quantize(decimal.Decimal('0.0000'))
-    #     plt.text(x, y+0.01, str(y2), ha='center', va='bottom')
-    # plt.plot(range(t_range),fitness_list,color = 'r')
-    # plt.savefig("PSO.pdf")
-    # plt.show()
-
-    # ------------------fit_function2----------------------
     fitness_list = []
     t_range = 1
     for t in range(t_range):
-        my_pso = PSO(p_num=200, dim=dim2, fit_function = fit_function2)
+        my_pso = PSO(p_num=100, dim=dim1, fit_function_order = 1)
+
         fitness = my_pso.iterator()
         fitness_list.append(fitness[-1])
     print("fitness each time:",fitness_list)
@@ -218,3 +198,27 @@ if __name__ == '__main__':
     plt.plot(range(t_range),fitness_list,color = 'r')
     plt.savefig("PSO.pdf")
     plt.show()
+
+    # ------------------fit_function2----------------------
+    # fitness_list = []
+    # t_range = 1
+    # for t in range(t_range):
+    #     my_pso = PSO(p_num=200, dim=dim2, fit_function = fit_function2)
+    #     fitness = my_pso.iterator()
+    #     fitness_list.append(fitness[-1])
+    # print("fitness each time:",fitness_list)
+    # print("mean_fitness:",np.mean(fitness_list),"Best_fitness:",np.min(fitness_list))
+    # # -------------------figure--------------------
+    # plt.figure(1)
+    # plt.title("Find minimum of function")
+    # plt.xlabel("iterators", size=14)
+    # plt.ylabel("fitness", size=14)
+    # # t = np.array([t for t in range(MAX_ITER)])
+    # fitness = np.array(fitness)
+    # # plt.plot(t, fitness, color='b', linewidth=3)
+    # for x, y in zip(range(t_range), fitness_list):
+    #     y2 = decimal.Decimal(y).quantize(decimal.Decimal('0.0000'))
+    #     plt.text(x, y+0.01, str(y2), ha='center', va='bottom')
+    # plt.plot(range(t_range),fitness_list,color = 'r')
+    # plt.savefig("PSO.pdf")
+    # plt.show()
