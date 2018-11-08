@@ -1,4 +1,4 @@
-function [Xopt,Fopt] = WCA_simple(obj_f, const, lb, ub, num_var, Npop, Nsr, dmax, max_it)
+function [Xopt,Fopt] = WCA_simple(obj_f, const, lb, ub, num_var, Npop, Nsr, dmax, max_it, numq)
 %% Info
 % This is a function to find a minimum solution!
 % author {Yu, Wei(Cyrus)} - This algorithm is only for Natural Computing
@@ -13,6 +13,7 @@ function [Xopt,Fopt] = WCA_simple(obj_f, const, lb, ub, num_var, Npop, Nsr, dmax
 %Nsr :      Number of rivers + sea
 %dmax :     Evaporation condition
 %max_it :   Maximum of iterations
+%numq :     The function and constraints of a specific problem 
 %Outputs:   
 %Xopt :     Optimum solution
 %Fopt :     Fitness of solution
@@ -23,10 +24,10 @@ pop = repmat(raindrop, Npop, 1);
 cost = zeros(Npop, 1);
 for i = 1:Npop 
     pop(i,:) = lb + (ub - lb).*rand(1,num_var);
-    while const(pop(i,:)) == 0
+    while const(pop(i,:),numq) == 0
         pop(i,:) = lb + (ub - lb).*rand(1,num_var);
     end 
-    cost(i) = obj_f(pop(i,:));
+    cost(i) = obj_f(pop(i,:),numq);
 end
 
 %sea and rivers
@@ -46,15 +47,15 @@ end
 
 %NSn
 NSn = zeros(Nsr, 1);
-sum_of_Csr = sum(obj_f(sea));
+sum_of_Csr = sum(obj_f(sea,numq));
 for i=1:Nsr-1
-    sum_of_Csr = sum_of_Csr + obj_f(rivers(i,:));
+    sum_of_Csr = sum_of_Csr + obj_f(rivers(i,:),numq);
 end
 for i = 1:Nsr
     if i == 1 
-        NSn(i) = round(abs(obj_f(sea)/sum_of_Csr) * Nrds);
+        NSn(i) = round(abs(obj_f(sea,numq)/sum_of_Csr) * Nrds);
     else
-        NSn(i) = round(abs(obj_f(rivers(i-1,:))/sum_of_Csr) * Nrds);
+        NSn(i) = round(abs(obj_f(rivers(i-1,:),numq)/sum_of_Csr) * Nrds);
     end
 end
 
@@ -81,26 +82,26 @@ for i=1:max_it
             tmp = raindrops(indx,:);
             if j > 1
                 raindrops(indx,:) = raindrops(indx,:) + C .* rand(1,num_var) .* (rivers(j-1,:) - raindrops(indx,:));
-                if const(raindrops(indx,:)) == 0
+                if const(raindrops(indx,:),numq) == 0
                     raindrops(indx,:) = tmp;
                 end
             else
                 raindrops(indx,:) = raindrops(indx,:) + C .* rand(1,num_var) .* (sea - raindrops(indx,:));
-                if const(raindrops(indx,:)) == 0
+                if const(raindrops(indx,:),numq) == 0
                     raindrops(indx,:) = tmp;
                 end
             end
             raindrops(indx,:) = min(raindrops(indx,:),ub);
             raindrops(indx,:) = max(raindrops(indx,:),lb);
-            cost_ra = obj_f(raindrops(indx,:));
-            cost_s = obj_f(sea);
+            cost_ra = obj_f(raindrops(indx,:),numq);
+            cost_s = obj_f(sea,numq);
             if j > 1
-                cost_r = obj_f(rivers(j-1,:));
+                cost_r = obj_f(rivers(j-1,:),numq);
                 if cost_ra < cost_r
                     n_river = raindrops(indx,:);
                     raindrops(indx,:) = rivers(j-1,:);
                     rivers(j-1,:) = n_river;
-                    cost_r = obj_f(rivers(j-1,:));
+                    cost_r = obj_f(rivers(j-1,:),numq);
                     if cost_r < cost_s
                         n_sea = rivers(j-1,:);
                         rivers(j-1,:) = sea;
@@ -120,13 +121,13 @@ for i=1:max_it
     for j = 1:Nsr-1
         tmp = rivers(j,:);
         rivers(j,:) = rivers(j,:) + C .* rand(1,num_var) .* (sea - rivers(j,:));
-        if const(rivers(j,:)) == 0
+        if const(rivers(j,:),numq) == 0
             rivers(j,:) = tmp;
         end
         rivers(j,:) = min(rivers(j,:),ub);
         rivers(j,:) = max(rivers(j,:),lb);
-        cost_r = obj_f(rivers(j,:));
-        cost_s = obj_f(sea);
+        cost_r = obj_f(rivers(j,:),numq);
+        cost_s = obj_f(sea,numq);
         if cost_r < cost_s
             n_sea = rivers(j,:);
             rivers(j,:) = sea;
@@ -139,7 +140,7 @@ for i=1:max_it
             for k=1:NSn(j)
                 indx = k + sum(NSn(1:k));
                 raindrops(indx,:) = lb + rand(1,num_var).*(ub-lb);
-                while const(raindrops(indx,:)) == 0
+                while const(raindrops(indx,:),numq) == 0
                     raindrops(indx,:) = lb + (ub - lb).*rand(1,num_var);
                 end 
             end
@@ -147,7 +148,7 @@ for i=1:max_it
     end
     dmax = dmax - (dmax/max_it);
     
-    cost_s = obj_f(sea);
+    cost_s = obj_f(sea,numq);
     disp(['No.' , num2str(i), '    F= ',num2str(cost_s)]);
     F_pre(i) = cost_s;
 end
@@ -157,5 +158,6 @@ xlabel('Number of Iterations');
 ylabel('Function Values');
 Xopt = sea;
 Fopt = cost_s;
+hold on
 end
     
